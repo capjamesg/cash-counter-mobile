@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Test Model</title>
+        <script src="https://cdn.roboflow.com/0.2.25/roboflow.js"></script>
+    </head>
+    <body>
+        <canvas width="640" height="480" id="picture_canvas"></canvas>
+        <ul id="found_objects"></ul>
+        <script>
+            // ask for webcam permission
+            navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
+                // create a video element in which to show the webcam
+                var video = document.createElement("video");
+                video.srcObject = stream;
+                // flip camera
+                video.onloadedmetadata = function(e) {
+                    video.play();
+                    // load the model
+                    roboflow.auth({
+                        publishable_key: "rf_U7AD2Mxh39N7jQ3B6cP8xAyufLH3"
+                    }).load({
+                        model: "cash-counter",
+                        version: 9
+                    }).then(function(model) {
+                        // every 100 ms, detect objects in the webcam
+                        setInterval(function() {
+                            var canvas = document.getElementById("picture_canvas");
+                            var ctx = canvas.getContext("2d");
+
+                            model.detect(video).then(function(predictions) {
+                                requestAnimationFrame(function() {
+                                    ctx.drawImage(video, 0, 0, 640, 480);
+                                    for (var i = 0; i < predictions.length; i++) {
+                                        var prediction = predictions[i];
+                                        found_objects.innerHTML = "<li>" + prediction.class + " " + prediction.confidence + "</li>";
+                                    }
+                                });
+                            });
+                        }, 100);
+                    });
+                };
+            });
+        </script>
+    </body>
+</html>
